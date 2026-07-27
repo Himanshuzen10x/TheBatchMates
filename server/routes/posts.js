@@ -74,6 +74,10 @@ router.get('/feed', async (req, res) => {
     const posts = await Post.find()
       .populate('user', 'username profilePic')
       .populate('comments.user', 'username profilePic')
+      .populate({
+        path: 'originalPost',
+        populate: { path: 'user', select: 'username profilePic' }
+      })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
@@ -94,6 +98,10 @@ router.get('/friends-feed', auth, async (req, res) => {
     const posts = await Post.find({ user: { $in: friendIds } })
       .populate('user', 'username profilePic')
       .populate('comments.user', 'username profilePic')
+      .populate({
+        path: 'originalPost',
+        populate: { path: 'user', select: 'username profilePic' }
+      })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit);
@@ -109,6 +117,10 @@ router.get('/user/:userId', async (req, res) => {
     const posts = await Post.find({ user: req.params.userId })
       .populate('user', 'username profilePic')
       .populate('comments.user', 'username profilePic')
+      .populate({
+        path: 'originalPost',
+        populate: { path: 'user', select: 'username profilePic' }
+      })
       .sort({ createdAt: -1 });
     res.json(posts);
   } catch (error) {
@@ -150,6 +162,42 @@ router.post('/comment/:id', auth, async (req, res) => {
       .populate('user', 'username profilePic')
       .populate('comments.user', 'username profilePic');
     res.json(updatedPost);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Repost / Reshare post to user's timeline feed
+router.post('/share/:id', auth, async (req, res) => {
+  try {
+    const original = await Post.findById(req.params.id);
+    if (!original) return res.status(404).json({ message: 'Post not found' });
+
+    if (!original.shares) original.shares = [];
+    if (!original.shares.includes(req.user.id)) {
+      original.shares.push(req.user.id);
+      await original.save();
+    }
+
+    const reshareText = req.body.text ? req.body.text.trim() : '';
+
+    const repost = new Post({
+      user: req.user.id,
+      text: reshareText,
+      originalPost: original._id
+    });
+
+    await repost.save();
+
+    const populated = await Post.findById(repost._id)
+      .populate('user', 'username profilePic')
+      .populate('comments.user', 'username profilePic')
+      .populate({
+        path: 'originalPost',
+        populate: { path: 'user', select: 'username profilePic' }
+      });
+
+    res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

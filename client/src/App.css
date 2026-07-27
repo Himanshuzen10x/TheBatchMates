@@ -3939,3 +3939,105 @@ button, input, textarea {
 .btn-copy-link.copied {
   background: var(--success);
 }
+
+/* ==========================================================================
+   INTERNAL FEED RESHARE & REPOST STYLES
+   ========================================================================== */
+.reshared-post-card {
+  background: var(--bg-app);
+  border: 1px solid var(--border-card);
+  border-left: 3px solid var(--primary-blue);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+
+.reshared-header-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+}
+
+.reshared-icon-tag {
+  font-weight: 800;
+  color: var(--primary-blue);
+}
+
+.reshared-author-name {
+  color: var(--text-muted);
+}
+
+.reshared-post-text {
+  font-size: 0.9rem;
+  color: var(--text-dark);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+.reshared-post-image {
+  max-height: 200px;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 2px;
+  margin-top: 8px;
+}
+
+.reshare-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reshare-input-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.reshare-textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-card);
+  border-radius: 3px;
+  font-size: 0.88rem;
+  outline: none;
+  resize: vertical;
+}
+
+.btn-reshare-submit {
+  padding: 10px 16px;
+  background: var(--primary-blue);
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-reshare-submit:hover {
+  background: var(--primary-blue-hover);
+  transform: translateY(-1px);
+}
+
+.btn-reshare-submit.success {
+  background: var(--success);
+}
+
+.share-divider {
+  text-align: center;
+  border-bottom: 1px solid var(--border-light);
+  line-height: 0.1em;
+  margin: 6px 0;
+}
+
+.share-divider span {
+  background: #fff;
+  padding: 0 10px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}

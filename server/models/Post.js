@@ -51,7 +51,15 @@ const postSchema = new mongoose.Schema({
       type: Date,
       default: Date.now
     }
-  }]
+  shares: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  originalPost: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Post',
+    default: null
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Post', postSchema);
