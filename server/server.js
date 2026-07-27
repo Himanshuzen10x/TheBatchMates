@@ -45,8 +45,8 @@ app.use('/api/friends', friendRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/events', eventRoutes);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Social Media API is running' });
+app.get(['/', '/api'], (req, res) => {
+  res.json({ status: 'online', message: 'The Batchmates Backend API is running successfully' });
 });
 
 // Only listen when not on Vercel
