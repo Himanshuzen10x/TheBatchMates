@@ -140,7 +140,7 @@ function Login() {
           <a href="#terms" onClick={(e) => e.preventDefault()}>terms</a>
           <a href="#privacy" onClick={(e) => e.preventDefault()}>privacy</a>
         </div>
-        <p className="footer-copyright">The Batchmates © 2004</p>
+        <p className="footer-copyright">The Batchmates © 2004 - 2026</p>
       </footer>
     </div>
   );
