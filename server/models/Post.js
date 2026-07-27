@@ -8,10 +8,7 @@ const postSchema = new mongoose.Schema({
   },
   text: {
     type: String,
-    required: function() {
-      // Required only if no image and no poll
-      return !this.image && (!this.poll || !this.poll.options || this.poll.options.length === 0);
-    }
+    default: ''
   },
   image: {
     type: String,

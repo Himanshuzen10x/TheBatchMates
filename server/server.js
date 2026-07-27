@@ -18,13 +18,8 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use((req, res, next) => {
-  // Skip JSON parsing for multipart/form-data (file uploads handled by multer)
-  if (req.headers['content-type']?.startsWith('multipart/form-data')) {
-    return next();
-  }
-  express.json()(req, res, next);
-});
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Connect to MongoDB before handling requests
 app.use(async (req, res, next) => {

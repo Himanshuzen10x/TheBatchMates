@@ -99,7 +99,8 @@ function CreatePost({ onPostCreated, isFriendFeed = false }) {
       setPollQuestion('');
       setPollOptions(['', '']);
     } catch (err) {
-      alert(err.response?.data?.message || 'Error creating post');
+      console.error('Post creation error:', err);
+      alert(err.response?.data?.message || err.message || 'Error creating post. Please try again.');
     } finally {
       setUploading(false);
     }
