@@ -7,20 +7,6 @@ const Event = require('../models/Event');
 const auth = require('../middleware/auth');
 const router = express.Router();
 
-// Get user profile
-router.get('/:id', auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select('-password')
-      .populate('followers', 'username profilePic')
-      .populate('following', 'username profilePic')
-      .populate('friends', 'username profilePic');
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
 // Update profile (bio, profilePic, major, graduating, interests)
 router.put('/profile', auth, async (req, res) => {
   try {
@@ -282,19 +268,25 @@ router.put('/follow/:id', auth, async (req, res) => {
   }
 });
 
-// Search users
-router.get('/', auth, async (req, res) => {
+// Get user profile (supports GET /:id and GET /profile/:id)
+const getByIdHandler = async (req, res) => {
   try {
-    const { search } = req.query;
-    let query = {};
-    if (search) {
-      query = { username: { $regex: search, $options: 'i' } };
+    const targetId = req.params.id || req.params.profileId;
+    if (!targetId || targetId === 'undefined' || targetId === 'null') {
+      return res.status(400).json({ message: 'Invalid user ID' });
     }
-    const users = await User.find(query).select('-password').limit(20);
-    res.json(users);
+    const user = await User.findById(targetId).select('-password')
+      .populate('followers', 'username profilePic')
+      .populate('following', 'username profilePic')
+      .populate('friends', 'username profilePic');
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json(user);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+};
+
+router.get('/profile/:id', auth, getByIdHandler);
+router.get('/:id', auth, getByIdHandler);
 
 module.exports = router;
