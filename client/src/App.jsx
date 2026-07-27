@@ -96,7 +96,7 @@ function AppRoutes() {
       {user && location.pathname !== '/messages' && location.pathname !== '/friends' && (
         <footer className="campus-page-footer">
           <div className="footer-left">
-            <span>The Batchmates © 2004 - 2026</span>
+            <span>Batchmates © 2026</span>
             <Link to="/about">About</Link>
             <Link to="/terms">Terms</Link>
             <Link to="/privacy">Privacy</Link>
