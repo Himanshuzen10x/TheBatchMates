@@ -10,12 +10,13 @@ function Post({ post, onUpdate, onDelete }) {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [reshareText, setReshareText] = useState('');
-  const [resharing, setResharing] = useState(false);
-  const [reshareSuccess, setReshareSuccess] = useState(false);
 
   const getPostShareUrl = () => {
     return `${window.location.origin}/#post-${post._id}`;
+  };
+
+  const getShareText = () => {
+    return `Check out this post by ${post.user?.username || 'Batchmate'} on The Batchmates! 🎓\n"${post.text ? post.text.slice(0, 100) : ''}"`;
   };
 
   const handleCopyLink = () => {
@@ -24,24 +25,25 @@ function Post({ post, onUpdate, onDelete }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleReshareToFeed = async () => {
-    if (resharing) return;
-    setResharing(true);
-    try {
-      const res = await API.post(`/posts/share/${post._id}`, { text: reshareText });
-      setReshareSuccess(true);
-      setTimeout(() => {
-        setReshareSuccess(false);
-        setShowShareModal(false);
-        setReshareText('');
-        if (onUpdate) onUpdate(res.data);
-      }, 1000);
-    } catch (err) {
-      console.error(err);
-      alert('Failed to reshare post');
-    } finally {
-      setResharing(false);
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${post.user?.username || 'Batchmate'}`,
+          text: getShareText(),
+          url: getPostShareUrl()
+        });
+      } catch (err) {
+        // user cancelled or share failed
+      }
     }
+  };
+
+  const shareLinks = {
+    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(getShareText() + '\n' + getPostShareUrl())}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(getShareText())}&url=${encodeURIComponent(getPostShareUrl())}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getPostShareUrl())}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getPostShareUrl())}`
   };
 
   const isLiked = post.likes.includes(user._id);
@@ -165,24 +167,6 @@ function Post({ post, onUpdate, onDelete }) {
 
       {post.text && <p className="post-text">{post.text}</p>}
 
-      {/* EMBEDDED RESHARED ORIGINAL POST CARD */}
-      {post.originalPost && (
-        <div className="reshared-post-card">
-          <div className="reshared-header-meta">
-            <span className="reshared-icon-tag">🔁 Reshared Post</span>
-            <span className="reshared-author-name">
-              Author: <strong>{post.originalPost.user?.username || 'Batchmate'}</strong>
-            </span>
-          </div>
-          {post.originalPost.text && (
-            <p className="reshared-post-text">"{post.originalPost.text}"</p>
-          )}
-          {post.originalPost.image && (
-            <img src={post.originalPost.image} alt="Reshared media" className="reshared-post-image" />
-          )}
-        </div>
-      )}
-
       {/* RENDER INTERACTIVE CAMPUS POLL */}
       {hasPoll && (
         <div className="post-poll-card">
@@ -244,7 +228,7 @@ function Post({ post, onUpdate, onDelete }) {
       )}
 
       {/* Summary Counts Line */}
-      {(post.likes.length > 0 || post.comments.length > 0 || (post.shares && post.shares.length > 0)) && (
+      {(post.likes.length > 0 || post.comments.length > 0) && (
         <div className="post-stats-summary">
           {post.likes.length > 0 && (
             <span className="stats-likes">👍 {post.likes.length} {post.likes.length === 1 ? 'Like' : 'Likes'}</span>
@@ -253,9 +237,6 @@ function Post({ post, onUpdate, onDelete }) {
             <span className="stats-comments" onClick={() => setShowComments(!showComments)}>
               💬 {post.comments.length} {post.comments.length === 1 ? 'Comment' : 'Comments'}
             </span>
-          )}
-          {post.shares && post.shares.length > 0 && (
-            <span className="stats-shares">🔁 {post.shares.length} {post.shares.length === 1 ? 'Reshare' : 'Reshares'}</span>
           )}
         </div>
       )}
@@ -268,7 +249,7 @@ function Post({ post, onUpdate, onDelete }) {
           💬 Comment
         </button>
         <button onClick={() => setShowShareModal(true)} className="action-btn">
-          🔁 Share / Repost
+          ↗️ Share
         </button>
       </div>
 
@@ -293,40 +274,72 @@ function Post({ post, onUpdate, onDelete }) {
         </div>
       )}
 
-      {/* INTERNAL RESHARE / REPOST MODAL */}
+      {/* MULTI-PLATFORM SHARE MODAL */}
       {showShareModal && (
         <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
           <div className="share-modal-card" onClick={(e) => e.stopPropagation()}>
             <div className="share-modal-header">
-              <h3>🔁 Share Post to Feed</h3>
+              <h3>↗️ Share Post</h3>
               <button className="btn-modal-close" onClick={() => setShowShareModal(false)}>×</button>
             </div>
 
             <div className="share-modal-body">
-              <div className="share-post-preview">
+              <p className="share-post-preview">
                 <strong>{post.user?.username || 'Batchmate'}:</strong> "{post.text ? post.text.slice(0, 110) : ''}{post.text && post.text.length > 110 ? '...' : ''}"
-              </div>
+              </p>
 
-              <div className="reshare-input-block">
-                <label className="reshare-input-label">Add your thoughts (optional):</label>
-                <textarea
-                  value={reshareText}
-                  onChange={(e) => setReshareText(e.target.value)}
-                  placeholder="What's your take on this post?"
-                  className="reshare-textarea"
-                  rows={2}
-                />
-                <button
-                  type="button"
-                  onClick={handleReshareToFeed}
-                  disabled={resharing}
-                  className={`btn-reshare-submit ${reshareSuccess ? 'success' : ''}`}
+              <div className="share-options-grid">
+                <a
+                  href={shareLinks.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-platform-btn whatsapp"
                 >
-                  {reshareSuccess ? '✓ Reshared to your feed!' : resharing ? 'Resharing...' : '🔁 Reshare to My Feed'}
-                </button>
-              </div>
+                  <span className="platform-icon">💬</span>
+                  <span>WhatsApp</span>
+                </a>
 
-              <div className="share-divider"><span>OR</span></div>
+                <a
+                  href={shareLinks.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-platform-btn twitter"
+                >
+                  <span className="platform-icon">🐦</span>
+                  <span>Twitter / X</span>
+                </a>
+
+                <a
+                  href={shareLinks.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-platform-btn linkedin"
+                >
+                  <span className="platform-icon">💼</span>
+                  <span>LinkedIn</span>
+                </a>
+
+                <a
+                  href={shareLinks.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-platform-btn facebook"
+                >
+                  <span className="platform-icon">📘</span>
+                  <span>Facebook</span>
+                </a>
+
+                {typeof navigator !== 'undefined' && navigator.share && (
+                  <button
+                    type="button"
+                    onClick={handleNativeShare}
+                    className="share-platform-btn native"
+                  >
+                    <span className="platform-icon">📱</span>
+                    <span>More Apps</span>
+                  </button>
+                )}
+              </div>
 
               <div className="copy-link-box">
                 <input
