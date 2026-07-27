@@ -1,10 +1,14 @@
 const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 
+const cloud_name = process.env.CLOUDINARY_CLOUD_NAME || 'niqykuy3';
+const api_key = process.env.CLOUDINARY_API_KEY || '767646741512121';
+const api_secret = process.env.CLOUDINARY_API_SECRET || '4VaES-fDWJzVY0_nJMDaX3gNiBQ';
+
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  cloud_name,
+  api_key,
+  api_secret
 });
 
 // Use memory storage so we can check moderation before accepting

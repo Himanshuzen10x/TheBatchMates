@@ -67,12 +67,17 @@ function CreatePost({ onPostCreated, isFriendFeed = false }) {
       let imageUrl = '';
 
       if (imageFile) {
-        const formData = new FormData();
-        formData.append('image', imageFile);
-        const uploadRes = await API.post('/upload', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        imageUrl = uploadRes.data.url;
+        try {
+          const formData = new FormData();
+          formData.append('image', imageFile);
+          const uploadRes = await API.post('/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+          });
+          imageUrl = uploadRes.data.url;
+        } catch {
+          // Fallback to local Data URL if server upload API has any issue
+          imageUrl = imagePreview;
+        }
       }
 
       let pollData = undefined;
