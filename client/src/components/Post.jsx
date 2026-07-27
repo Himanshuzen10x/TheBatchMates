@@ -8,6 +8,43 @@ function Post({ post, onUpdate, onDelete }) {
   const [showComments, setShowComments] = useState(false);
   const [voting, setVoting] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const getPostShareUrl = () => {
+    return `${window.location.origin}/#post-${post._id}`;
+  };
+
+  const getShareText = () => {
+    return `Check out this post by ${post.user?.username || 'Batchmate'} on The Batchmates! 🎓\n"${post.text ? post.text.slice(0, 100) : ''}"`;
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(getPostShareUrl());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Post by ${post.user?.username || 'Batchmate'}`,
+          text: getShareText(),
+          url: getPostShareUrl()
+        });
+      } catch (err) {
+        // user cancelled or share failed
+      }
+    }
+  };
+
+  const shareLinks = {
+    whatsapp: `https://api.whatsapp.com/send?text=${encodeURIComponent(getShareText() + '\n' + getPostShareUrl())}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(getShareText())}&url=${encodeURIComponent(getPostShareUrl())}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getPostShareUrl())}`,
+    linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(getPostShareUrl())}`
+  };
 
   const isLiked = post.likes.includes(user._id);
   const isOwner = post.user._id === user._id;
@@ -211,7 +248,7 @@ function Post({ post, onUpdate, onDelete }) {
         <button onClick={() => setShowComments(!showComments)} className="action-btn">
           💬 Comment
         </button>
-        <button onClick={() => alert('Post shared!')} className="action-btn">
+        <button onClick={() => setShowShareModal(true)} className="action-btn">
           ↗️ Share
         </button>
       </div>
@@ -234,6 +271,93 @@ function Post({ post, onUpdate, onDelete }) {
               {submittingComment ? 'Posting...' : 'Comment'}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* MULTI-PLATFORM SHARE MODAL */}
+      {showShareModal && (
+        <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
+          <div className="share-modal-card" onClick={(e) => e.stopPropagation()}>
+            <div className="share-modal-header">
+              <h3>↗️ Share Post</h3>
+              <button className="btn-modal-close" onClick={() => setShowShareModal(false)}>×</button>
+            </div>
+
+            <div className="share-modal-body">
+              <p className="share-post-preview">
+                <strong>{post.user?.username || 'Batchmate'}:</strong> "{post.text ? post.text.slice(0, 110) : ''}{post.text && post.text.length > 110 ? '...' : ''}"
+              </p>
+
+              <div className="share-options-grid">
+                <a
+                  href={shareLinks.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-platform-btn whatsapp"
+                >
+                  <span className="platform-icon">💬</span>
+                  <span>WhatsApp</span>
+                </a>
+
+                <a
+                  href={shareLinks.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-platform-btn twitter"
+                >
+                  <span className="platform-icon">🐦</span>
+                  <span>Twitter / X</span>
+                </a>
+
+                <a
+                  href={shareLinks.linkedin}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-platform-btn linkedin"
+                >
+                  <span className="platform-icon">💼</span>
+                  <span>LinkedIn</span>
+                </a>
+
+                <a
+                  href={shareLinks.facebook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="share-platform-btn facebook"
+                >
+                  <span className="platform-icon">📘</span>
+                  <span>Facebook</span>
+                </a>
+
+                {typeof navigator !== 'undefined' && navigator.share && (
+                  <button
+                    type="button"
+                    onClick={handleNativeShare}
+                    className="share-platform-btn native"
+                  >
+                    <span className="platform-icon">📱</span>
+                    <span>More Apps</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="copy-link-box">
+                <input
+                  type="text"
+                  readOnly
+                  value={getPostShareUrl()}
+                  className="copy-link-input"
+                />
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className={`btn-copy-link ${copied ? 'copied' : ''}`}
+                >
+                  {copied ? '✓ Copied!' : 'Copy Link'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
